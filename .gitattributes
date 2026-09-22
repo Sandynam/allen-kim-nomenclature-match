@@ -1,0 +1,6 @@
+# Store text files with LF in the repo and check them out with LF on every OS,
+# regardless of each machine's core.autocrlf setting
+* text=auto eol=lf
+
+# Collapse the lockfile in GitHub pull request diffs (still expandable)
+package-lock.json linguist-generated=true
