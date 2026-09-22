@@ -93,7 +93,7 @@ function App() {
   // Column widths - responsive based on screen size
   const nameColWidth = screens.md ? 350 : screens.sm ? 250 : 180
   const atlasColWidth = screens.lg ? 180 : screens.md ? 140 : 100
-  const totalScrollX = nameColWidth + (atlasKeys.length * atlasColWidth) + 50 // +50 for expand icon
+  const totalScrollX = nameColWidth + atlasKeys.length * atlasColWidth + 50 // +50 for expand icon
 
   // Column definitions
   const columns: ColumnsType<RegionNode> = [
@@ -106,7 +106,7 @@ function App() {
       render: (value: string) => highlightText(value, searchText),
     },
     ...atlasKeys.map((key, index) => ({
-      title: screens.md ? (atlases[index] || key) : (atlases[index]?.split(' ')[0] || key),
+      title: screens.md ? atlases[index] || key : atlases[index]?.split(' ')[0] || key,
       dataIndex: key,
       key: key,
       width: atlasColWidth,
@@ -115,9 +115,13 @@ function App() {
         if (!value) {
           return <span style={{ color: '#ccc' }}>—</span>
         }
-        return <span style={{ fontFamily: 'monospace', fontWeight: 500 }}>{highlightText(value, searchText)}</span>
-      }
-    }))
+        return (
+          <span style={{ fontFamily: 'monospace', fontWeight: 500 }}>
+            {highlightText(value, searchText)}
+          </span>
+        )
+      },
+    })),
   ]
 
   // Collect all keys from tree
@@ -164,7 +168,7 @@ function App() {
       if (nameMatch || acronymMatch || (filteredChildren && filteredChildren.length > 0)) {
         result.push({
           ...node,
-          children: filteredChildren && filteredChildren.length > 0 ? filteredChildren : undefined
+          children: filteredChildren && filteredChildren.length > 0 ? filteredChildren : undefined,
         })
       }
     }
@@ -172,9 +176,7 @@ function App() {
     return result
   }
 
-  const filteredData = searchText.trim()
-    ? filterTree(data, searchText.toLowerCase())
-    : data
+  const filteredData = searchText.trim() ? filterTree(data, searchText.toLowerCase()) : data
 
   // Auto-expand when searching
   useEffect(() => {
@@ -213,7 +215,7 @@ function App() {
           <Input.Search
             placeholder="Search by region name or acronym..."
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={e => setSearchText(e.target.value)}
             allowClear
             style={{ width: 350 }}
             size="large"
@@ -222,14 +224,10 @@ function App() {
             <Button type="primary" onClick={expandAll}>
               Expand All
             </Button>
-            <Button onClick={collapseAll}>
-              Collapse All
-            </Button>
+            <Button onClick={collapseAll}>Collapse All</Button>
           </Space>
           {searchText && (
-            <span className="match-count">
-              {getAllKeys(filteredData).length} matches
-            </span>
+            <span className="match-count">{getAllKeys(filteredData).length} matches</span>
           )}
         </div>
 
