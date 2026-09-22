@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react'
-import { Table, Input, Button, Space, ConfigProvider, theme, Grid } from 'antd'
+import { Table, Input, Button, Space, ConfigProvider, theme, Grid, message } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import type { Key } from 'react'
 
@@ -25,6 +25,30 @@ function highlightText(text: string, search: string): ReactNode {
       <mark style={{ background: '#ffe066', padding: '0 2px', borderRadius: 2 }}>{match}</mark>
       {after}
     </>
+  )
+}
+
+// Text that copies itself on click instead of toggling the row
+function CopyableText({
+  text,
+  onCopy,
+  children,
+}: {
+  text: string
+  onCopy: (text: string) => void
+  children: ReactNode
+}) {
+  return (
+    <span
+      className="copyable"
+      title="Click to copy"
+      onClick={e => {
+        e.stopPropagation()
+        onCopy(text)
+      }}
+    >
+      {children}
+    </span>
   )
 }
 
@@ -54,6 +78,14 @@ function App() {
   const [tableHeight, setTableHeight] = useState(400)
   const tableContainerRef = useRef<HTMLDivElement>(null)
   const screens = useBreakpoint()
+  const [messageApi, contextHolder] = message.useMessage()
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => messageApi.success({ content: `Copied: ${text}`, key: 'copy' }),
+      () => messageApi.error({ content: 'Could not copy to clipboard', key: 'copy' }),
+    )
+  }
 
   // Calculate table height dynamically
   useEffect(() => {
@@ -103,7 +135,11 @@ function App() {
       key: 'name',
       width: nameColWidth,
       fixed: screens.sm ? 'left' : undefined, // Only fix on sm+
-      render: (value: string) => highlightText(value, searchText),
+      render: (value: string) => (
+        <CopyableText text={value} onCopy={copyToClipboard}>
+          {highlightText(value, searchText)}
+        </CopyableText>
+      ),
     },
     ...atlasKeys.map((key, index) => ({
       title: screens.md ? atlases[index] || key : atlases[index]?.split(' ')[0] || key,
@@ -117,7 +153,9 @@ function App() {
         }
         return (
           <span style={{ fontFamily: 'monospace', fontWeight: 500 }}>
-            {highlightText(value, searchText)}
+            <CopyableText text={value} onCopy={copyToClipboard}>
+              {highlightText(value, searchText)}
+            </CopyableText>
           </span>
         )
       },
@@ -187,6 +225,9 @@ function App() {
 
   // Handle expand/collapse
   const onExpand = (expanded: boolean, record: RegionNode) => {
+    // expandRowByClick also fires for leaf rows, which have nothing to expand
+    if (!record.children) return
+
     if (expanded) {
       setExpandedKeys(prev => [...prev, record.key])
     } else {
@@ -203,6 +244,7 @@ function App() {
         },
       }}
     >
+      {contextHolder}
       <div className="app">
         <header className="header">
           <h1>Multi-Atlas Brain Region Comparison</h1>
@@ -240,8 +282,10 @@ function App() {
             expandable={{
               expandedRowKeys: expandedKeys as Key[],
               onExpand: onExpand,
+              expandRowByClick: true,
               indentSize: screens.sm ? 24 : 16,
             }}
+            rowClassName={record => (record.children ? 'expandable-row' : '')}
             pagination={false}
             scroll={{ x: totalScrollX, y: tableHeight }}
             size="small"
