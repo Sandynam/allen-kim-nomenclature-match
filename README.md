@@ -1,5 +1,7 @@
 # I created this to match brain region acronyms or names between Allen and Kim atlases.
 
+https://sandynam.github.io/allen-kim-nomenclature-match/
+
 ### Data from BrainGlobe Atlas API.
 
 - Allen Adult Mouse Brain Atlas - allen_mouse_10um_v1.2 (Wang et al., 2020)
